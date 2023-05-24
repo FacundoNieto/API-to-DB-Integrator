@@ -37,6 +37,7 @@ def cargar_datos():
             values_pedido = (
                 pedido['id_pedido'],
                 pedido['id_empresa'],
+                pedido['estado_pedido'],
                 pedido['fecha_pedido'],
                 pedido['_origen_id_sucursal'],
                 pedido['id_cliente'],
