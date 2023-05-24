@@ -8,17 +8,19 @@ import json
 
 def cargar_datos():
     # Obtener el JSON desde la API
-    url = 'http://111.222.33.444/api/obtenerpedidos'
+    url = 'http://siscon.info/api/obtenerpedidos'
     response = requests.get(url)
     json_str = response.text
     json_obj = json.loads(json_str)
+    if len(json_obj) == 0:
+        print("JSON vacio")
 
     # Conexión a la base de datos
     conn = pymysql.connect(
-        host='192.168.1.999',
-        user='user',
-        password='pass',
-        database='db_example'
+        host='192.168.9.215',
+        user='admin',
+        password='amarok',
+        database='zafiro_dro'
     )
     cursor = conn.cursor()
 
@@ -26,12 +28,11 @@ def cargar_datos():
         sql_check = "SELECT id_pedido FROM pedidos WHERE id_pedido = %s"
         cursor.execute(sql_check, pedido['id_pedido'])
         result = cursor.fetchone()
-        print(result)  # Solo para verificar en consola
 
         if result is None:
             sql_insert_pedido = """
-            INSERT INTO pedidos (id_pedido, id_empresa, fecha_pedido, _origen_id_sucursal, id_cliente, observaciones)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO pedidos (id_pedido, id_empresa, estado_pedido, fecha_pedido, _origen_id_sucursal, id_cliente, observaciones)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             values_pedido = (
                 pedido['id_pedido'],
@@ -43,10 +44,8 @@ def cargar_datos():
             )
             cursor.execute(sql_insert_pedido, values_pedido)
             conn.commit()
-            conn.rollback()
 
             if cursor.rowcount > 0:
-                print("Agregado correctamente")
                 sql_insert_lin_pedido = """
                 INSERT INTO lin_pedido (
                     id_pedido, item, id_articulo, cantidad, des_articulo,
@@ -67,10 +66,37 @@ def cargar_datos():
                     )
                     cursor.execute(sql_insert_lin_pedido, values_lin_pedido)
                     conn.commit()
-                    conn.rollback()
-    
-    if len(json_obj) == 0:
-        print("No hay solicitudes entrantes")
+
+                # Obtener el número de pedido
+                num_pedido = pedido['id_pedido']
+
+                # Obtener la cantidad de artículos
+                cant_articulos = len(pedido['lin_pedido'])
+
+                # Incrementar nro_proximo en 1
+                sql_update_talonarios = "UPDATE talonarios SET nro_proximo = nro_proximo + 1 WHERE nro_caja = 90 AND tipo_talon = 'PED'"
+                cursor.execute(sql_update_talonarios)
+                conn.commit()
+
+                # Obtener la cantidad de pedidos
+                sql_count_pedidos = "SELECT COUNT(*) FROM pedidos"
+                cursor.execute(sql_count_pedidos)
+                count_pedidos = cursor.fetchone()[0]
+
+                # Imprimir los datos requeridos
+                print("Solicitud cargada con éxito.")
+                print("Número de pedido:", num_pedido)
+                print("Cantidad de artículos:", cant_articulos)
+                print("Cantidad de pedidos:", count_pedidos)
+        else:
+            print("No se ingresaron nuevas solicitudes")
+
+    # Sumar el valor de nro_proximo de la tabla talonarios
+    sql_sum_nro_proximo = "SELECT nro_proximo FROM talonarios WHERE nro_caja = 90 AND tipo_talon = 'PED'"
+    cursor.execute(sql_sum_nro_proximo)
+    sum_nro_proximo = cursor.fetchone()[0]
+    print("Suma de nro_proximo:", sum_nro_proximo)
+
     conn.close()
 
 # Programar la ejecución de la función cada 45 segundos
