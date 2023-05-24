@@ -8,7 +8,7 @@ import json
 
 def cargar_datos():
     # Obtener el JSON desde la API
-    url = 'http://siscon.info/api/obtenerpedidos'
+    url = 'http://direccion/api/obtenerpedidos'
     response = requests.get(url)
     json_str = response.text
     json_obj = json.loads(json_str)
@@ -17,10 +17,10 @@ def cargar_datos():
 
     # Conexión a la base de datos
     conn = pymysql.connect(
-        host='192.168.9.215',
-        user='admin',
-        password='amarok',
-        database='zafiro_dro'
+        host='',
+        user='',
+        password='',
+        database=''
     )
     cursor = conn.cursor()
 
