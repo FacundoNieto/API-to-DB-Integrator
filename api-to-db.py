@@ -2,7 +2,7 @@ import schedule
 import time
 import requests
 import pymysql
-import json
+import json # a ver
 
 
 def cargar_datos():
