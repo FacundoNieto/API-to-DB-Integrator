@@ -18,9 +18,9 @@ def cargar_datos():
     # Conexión a la base de datos
     conn = pymysql.connect(
         host='',
-        user='',
-        password='',
-        database=''
+        user='dbuser',
+        password='dbpass',
+        database='dbname'
     )
 
     cursor = conn.cursor()
@@ -33,9 +33,24 @@ def cargar_datos():
         if result is None:
             nuevas_solicitudes = True  # Se encontró una nueva solicitud
 
+            # Reviso si existe nroAfiliado en el pedido, y consulto qué id_persona le corresponde en la tabla personas
+            if 'nroAfiliado' in pedido and pedido['nroAfiliado'] is not None:
+                sql_id_persona = "SELECT id_persona FROM personas WHERE nombre_secundario = %s"
+                cursor.execute(sql_id_persona, str(pedido['nroAfiliado']))
+                # devuelve una tupla de un sólo elemento, pero no hace falta extraerlo haciendo id_persona[0]
+                id_persona = cursor.fetchone()
+                if id_persona is None:
+                    print(f"id_persona es: {id_persona}, se buscó pero no se encontró id_persona")
+                else:
+                    print(f"id_persona encontrado: {id_persona}")
+            else:
+                id_persona = None
+                print(f"id_persona es: {id_persona}, pedido['nroAfiliado'] era 'null' ó no estaba en el json")
+
+            #Ahora sí inserto los datos en las tablas
             sql_insert_pedido = """
-            INSERT INTO pedidos (id_pedido, id_empresa, estado_pedido, fecha_pedido, _origen_id_sucursal, id_cliente, observaciones)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO pedidos (id_pedido, id_empresa, estado_pedido, fecha_pedido, _origen_id_sucursal, id_cliente, observaciones, _destinatario, _intermediario)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             values_pedido = (
                 pedido['id_pedido'],
@@ -44,13 +59,16 @@ def cargar_datos():
                 pedido['fecha_pedido'],
                 pedido['_origen_id_sucursal'],
                 pedido['id_cliente'],
-                pedido['observaciones']
+                pedido['observaciones'],
+                id_persona, # en "_destinatario"
+                10000455 #id_cliente de Apos, se carga en "_intermediario"                
             )
             cursor.execute(sql_insert_pedido, values_pedido)
             conn.commit()
 
             # si se cargó un registro en la tabla pedidos, cargo en lin_pedido
             if cursor.rowcount > 0:
+                
                 sql_insert_lin_pedido = """
                 INSERT INTO lin_pedido (
                     id_pedido, item, id_articulo, cantidad, des_articulo,
@@ -61,7 +79,8 @@ def cargar_datos():
                 values_lin_pedido = [
                     (
                         lin_pedido['id_pedido'],
-                        lin_pedido['item'],
+                        #lin_pedido['item'], #viene mal de la api en algunos casos
+                        index + 1,
                         lin_pedido['id_articulo'],
                         lin_pedido['cantidad'],
                         lin_pedido['des_articulo'],
@@ -69,7 +88,8 @@ def cargar_datos():
                         lin_pedido['pcio_vta_uni_siva'],
                         lin_pedido['pcio_com_uni_siva']
                     )
-                    for lin_pedido in pedido['lin_pedido']
+                    #for lin_pedido in pedido['lin_pedido']
+                    for index, lin_pedido in enumerate(pedido['lin_pedido'])  # Usamos enumerate() para obtener el índice
                 ]
                 cursor.executemany(sql_insert_lin_pedido, values_lin_pedido)
                 conn.commit()
@@ -108,7 +128,7 @@ def cargar_datos():
     cursor.execute(sql_sum_nro_proximo)
     sum_nro_proximo = cursor.fetchone()[0]
     print("Suma de nro_proximo:", sum_nro_proximo)
-    print("\n")
+    print("***\n")
 
     conn.close()
 
