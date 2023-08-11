@@ -2,12 +2,14 @@ import schedule
 import time
 import requests
 import pymysql
-import json
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def cargar_datos():
     # Obtener el JSON desde la API
-    url = 'http://direccion/api/obtenerpedidos'
+    url = os.getenv("URL")
     response = requests.get(url)
     json_obj = response.json()
 
@@ -17,10 +19,10 @@ def cargar_datos():
 
     # Conexión a la base de datos
     conn = pymysql.connect(
-        host='',
-        user='dbuser',
-        password='dbpass',
-        database='dbname'
+        host= os.getenv("HOST"),
+        user=os.getenv("USER"),
+        password=os.getenv("PASSWORD"),
+        database=os.getenv("DATABASE")
     )
 
     cursor = conn.cursor()
