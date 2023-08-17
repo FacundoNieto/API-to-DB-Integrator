@@ -9,7 +9,7 @@ load_dotenv()
 
 def cargar_datos():
     # Obtener el JSON desde la API
-    url = os.getenv("URL")
+    url = os.getenv("URL_API")
     response = requests.get(url)
     json_obj = response.json()
 
@@ -24,7 +24,6 @@ def cargar_datos():
         password=os.getenv("PASSWORD"),
         database=os.getenv("DATABASE")
     )
-
     cursor = conn.cursor()
 
     for pedido in json_obj:
@@ -130,10 +129,14 @@ def cargar_datos():
     cursor.execute(sql_sum_nro_proximo)
     sum_nro_proximo = cursor.fetchone()[0]
     print("Suma de nro_proximo:", sum_nro_proximo)
-    print("***\n")
+    
+    hora = time.time()
+    hora_legible = time.strftime('%H:%M:%S %d-%m-%Y', time.localtime(hora))
+    print(f"Hora: {hora_legible}\n")
 
     conn.close()
 
+cargar_datos()
 # Programar la ejecución de la función cada 45 segundos
 schedule.every(45).seconds.do(cargar_datos)
 
