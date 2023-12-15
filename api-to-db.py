@@ -100,8 +100,8 @@ def cargar_datos():
 							lin_pedido['cantidad'],
 							lin_pedido['des_articulo'],
 							lin_pedido['presentacion'],
-							lin_pedido['pcio_vta_uni_siva'],
-							lin_pedido['pcio_com_uni_siva']
+							lin_pedido['pcio_com_uni_siva'],
+							lin_pedido['pcio_vta_uni_siva']
 						)
 						#for lin_pedido in pedido['lin_pedido']
 						for index, lin_pedido in enumerate(pedido['lin_pedido'])  # Usamos enumerate() para obtener el índice
