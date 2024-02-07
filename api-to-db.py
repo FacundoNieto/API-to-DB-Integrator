@@ -34,7 +34,7 @@ def cargar_datos():
     # Obtener el JSON desde la API
 	try:
 		url = os.getenv("URL_API")
-		response = requests.get(url)
+				response = requests.get(url)
 		json_obj = response.json()
 
 		if not json_obj:
@@ -53,7 +53,8 @@ def cargar_datos():
 				if 'nroAfiliado' in pedido and pedido['nroAfiliado'] is not None:
 					sql_id_persona = "SELECT id_persona FROM personas WHERE nombre_secundario = %s"
 					cursor.execute(sql_id_persona, str(pedido['nroAfiliado']))
-					id_persona = cursor.fetchone() # devuelve ((),) tupla de un sólo elemento
+					# devuelve una tupla de un sólo elemento, pero no hace falta extraerlo haciendo id_persona[0]
+					id_persona = cursor.fetchone()
 					if id_persona is None:
 						print(f"id_persona es: {id_persona}, se buscó pero no se encontró id_persona")
 					else:
